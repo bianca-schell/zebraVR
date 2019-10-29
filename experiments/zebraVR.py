@@ -12,19 +12,20 @@ import numpy as np
 from shutil import copyfile
 from tetheredvr.proxy import JSONStimulusOSGController
 from tetheredvr.observers import SimulatedObserver, CarModelSocketObserver
-import emailer
 
 replication = 3
 
 project = 'DecisionGeometry'
 experimenter = 'VHS'
 
-projectDB = '/home/flyvr/flyvr/fly-matrix/dbGen/flyProjects.db'
-expDB = '/home/flyvr/flyvr/fly-matrix/dbGen/flyExperiments.db'
-pathData = '/home/flyvr/flyvr/data/'
+projectDB = '/home/flyvr/zebraVR/databases/zebraProjects.db'
+expDB = '/home/flyvr/zebraVR/databases/zebraExperiments.db'
+pathData = '/home/flyvr/zebraVR/data/'
 
 running = 1
 numberPost = 10
+numberCubes = 2
+
 
 
 def pathDefine(path,ids, params=[]):
@@ -72,6 +73,7 @@ class MyExperiment(object):
         # set starting position for stimuli
         self.rootPosition = np.zeros((1,2))
         self.postPosition = np.zeros((numberPost,2))
+        self.cubePosition = np.zeros((numberCubes,2))       
         self.postDistance = 5.0
 
         # set starting position of fly
@@ -84,7 +86,6 @@ class MyExperiment(object):
         self.getExperiment()
         # start every experiment with a no post condition
         self.updateStimuli(0)
-        emailer.twitStatus(self.expId,status = 0, t=self.tExp)
         self.running = True
         # event counter (number of times fly position is reset)
         self.cntr = 0
@@ -206,7 +207,7 @@ class MyExperiment(object):
                     sl_t0 = time.time()
                     self.cntr = 0
                 
-                for nPost in range(0,10):
+                for nPost in range(0,4):
                     if distance(pos, self.postPosition[nPost,:], True) < 0.5:
                         self.observer.reset_to(**self.start_position)
                         self.cntr += 1
@@ -244,7 +245,7 @@ class MyExperiment(object):
                 #dictData = eval(data)
                 #print(dictData['position'])
                 self.postPosition[nCube,:] = [0,0]
-            self.ds_proxy.move_node('Cube' + str(nCube), self.postPosition[nCube,0],  self.postPosition[nCube,1], 0)
+            self.ds_proxy.move_node('Cube' + str(nCube), self.cubePosition[nCube,0],  self.cubePosition[nCube,1], 0)
             #print(self.postPosition)
             # prox move node puts cube at 0,0 like this??
         
@@ -253,7 +254,7 @@ class MyExperiment(object):
 
 
 
-        for nPost in range(0,10):
+        for nPost in range(0,4):
             print((project,self.expTrial,self.replicate,nStimuli))
             cursorProject.execute("Select post"+str(nPost)+" from projects where project = ? and exp = ? and replicate = ? and nStimuli =?",(project,self.expTrial,self.replicate,nStimuli))
             fetched = cursorProject.fetchall()
@@ -273,21 +274,22 @@ class MyExperiment(object):
         
         for nCube in range(0,2):
             #print((project,self.expTrial,self.replicate,nStimuli))
-            cursorProject.execute("Select Cube"+str(nCube)+" from projects where project = ? and exp = ? and replicate = ? and nStimuli =?",(project,self.expTrial,self.replicate,nStimuli))
-            fetched = cursorProject.fetchall()
+            #cursorProject.execute("Select Cube"+str(nCube)+" from projects where project = ? and exp = ? and replicate = ? and nStimuli =?",(project,self.expTrial,self.replicate,nStimuli))
+            #fetched = cursorProject.fetchall()
 
-            data = fetched[0][0]
+            #data = fetched[0][0]
 
 
-            if data == 'None':
+            #if data == 'None':
                 
-                self.postPosition[nPost,:] = [1000,1000]
+            #    self.postPosition[nPost,:] = [1000,1000]
 
-            else:
-                self.postPosition[nPost,:] = [0,0]
-
-            self.ds_proxy.move_node('Cube' + str(nPost), self.postPosition[nPost,0],  self.postPosition[nPost,1], 0)
-        
+            #else:
+            #    self.postPosition[nPost,:] = [0,0]
+            #self.cubePosition(Cube0) = [0,0]
+            #self.cubePosition(Cube1) = [1000,1000]
+            #self.ds_proxy.move_node('Cube' + str(nPost), self.cubePosition[nPost,0],  self.postPosition[nPost,1], 0)
+            self.ds_proxy.move_node('Cube0',0,0,0)        
         # close connection
         conn.close()
 
@@ -316,7 +318,7 @@ class MyExperiment(object):
 
 def main():
     # OSGT files need to be in /home/flyvr/flyvr/FreemooVR/data
-    ex = MyExperiment(osg_file='ten_post_stimulus.osgt')
+    ex = MyExperiment(osg_file='complete-cub-cyl.osgt')
 
     try:
         ex.experiment_start()
