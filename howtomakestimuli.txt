@@ -1,0 +1,14 @@
+to create blender cylinder:
+
+make cylinder with right proportions
+give it a material
+associate it texture
+(upload an image that has a fair resolution (otherwise blurred))
+in edit mode:
+unwrap in window front view (press 1 of numpad); cylinder projection
+open new window at side
+UV editor
+
+in material tick shadeless (can be removed afterwards if stripes are greyish)
+
+

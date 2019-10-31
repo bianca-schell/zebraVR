@@ -195,19 +195,20 @@ class MyExperiment(object):
                     except:
                         pass
                     lastMessage = False
-
-                if t > self.tExp*60:
+                #origi: if t > self.tExp*60:
+                if t > self.tExp:
                     self.running = False
                     self.writeInDb()
                     emailer.twitStatus(self.expId,status = 2, t=self.tExp)                   
-                elif t > (nStimuli+1)*self.tSwitch*60:
+                #origi:elif t > (nStimuli+1)*self.tSwitch*60:
+                elif t > (nStimuli+1)*self.tSwitch:
                     nStimuli = nStimuli+1
                     self.observer.reset_to(**self.start_position)
                     self.updateStimuli(nStimuli)
                     sl_t0 = time.time()
                     self.cntr = 0
                 
-                for nPost in range(0,4):
+                for nPost in range(0,10):
                     if distance(pos, self.postPosition[nPost,:], True) < 0.5:
                         self.observer.reset_to(**self.start_position)
                         self.cntr += 1
@@ -254,7 +255,7 @@ class MyExperiment(object):
 
 
 
-        for nPost in range(0,4):
+        for nPost in range(0,10):
             print((project,self.expTrial,self.replicate,nStimuli))
             cursorProject.execute("Select post"+str(nPost)+" from projects where project = ? and exp = ? and replicate = ? and nStimuli =?",(project,self.expTrial,self.replicate,nStimuli))
             fetched = cursorProject.fetchall()
@@ -270,6 +271,10 @@ class MyExperiment(object):
                 self.postPosition[nPost,:] = dictData['position']
                 self.postDistance = dictData['distance']
             self.ds_proxy.move_node('Cylinder' + str(nPost), self.postPosition[nPost,0],  self.postPosition[nPost,1], 0)
+            
+            self.ds_proxy.move_node('Cylinder2' , 0.5,0.5, 0)
+            #self.ds_proxy.move_node('Cylinder3' , -1,-1, 0)
+            
             #print(self.postPosition)
         
         for nCube in range(0,2):
@@ -288,8 +293,8 @@ class MyExperiment(object):
             #    self.postPosition[nPost,:] = [0,0]
             #self.cubePosition(Cube0) = [0,0]
             #self.cubePosition(Cube1) = [1000,1000]
-            #self.ds_proxy.move_node('Cube' + str(nPost), self.cubePosition[nPost,0],  self.postPosition[nPost,1], 0)
-            self.ds_proxy.move_node('Cube0',0,0,0)        
+            self.ds_proxy.move_node('Cube' + str(nCube), self.cubePosition[nCube,0],  self.cubePosition[nCube,1], 0)
+            #self.ds_proxy.move_node('Cube0',0,0,0)     
         # close connection
         conn.close()
 
@@ -318,8 +323,8 @@ class MyExperiment(object):
 
 def main():
     # OSGT files need to be in /home/flyvr/flyvr/FreemooVR/data
-    ex = MyExperiment(osg_file='complete-cub-cyl.osgt')
-
+    #ex = MyExperiment(osg_file='10post_2cubes_32stripe.osgt')
+    ex = MyExperiment(osg_file='10post_2cubes_32stripe.osgt')
     try:
         ex.experiment_start()
 
